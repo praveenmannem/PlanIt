@@ -9,27 +9,68 @@
 import UIKit
 import CoreData
 
-class DisplayDataViewController: UIViewController {
+protocol editedDelegate {
+    
+    func didEditText()
+}
 
+class DisplayDataViewController: UIViewController,UITextViewDelegate{
+    
+    var notes = [NSManagedObject]()
+    
+    var editedData:Notes!
+
+    var delegate : editedDelegate!
     
     @IBOutlet weak var myTextView: UITextView!
-    var text:String?
-    
+    var passedValue:String?
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.myTextView.delegate = self
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(DisplayDataViewController.dismissKeyboard))
+        view.addGestureRecognizer(tap)
 
     }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        if let text = text {
+        if let text = passedValue {
             myTextView.text = text
         }
     }
     @IBAction func editButton(_ sender: UIButton) {
+        
+        myTextView.isUserInteractionEnabled = true
+        myTextView.becomeFirstResponder()
+    }
+    @objc func dismissKeyboard() {
+        
+        view.endEditing(true)
     }
     
     @IBAction func doneButton(_ sender: UIButton) {
+        let detail = self.myTextView
+        
+        var editText = ""
+        editText = myTextView.text!
+        
+        self.editedData.myNotes = editText
+        
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.saveContext()
+         delegate.didEditText()
+        self.navigationController?.popViewController(animated: true)
+        
+        
+
+    }
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        if(text == "\n") {
+            textView.resignFirstResponder()
+            return false
+        }
+        return true
     }
 
         // Do any additional setup after loading the view.
@@ -39,6 +80,7 @@ class DisplayDataViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
     
 
     /*
@@ -50,5 +92,4 @@ class DisplayDataViewController: UIViewController {
         // Pass the selected object to the new view controller.
     }
     */
-
 }
